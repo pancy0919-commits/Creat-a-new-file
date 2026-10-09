@@ -15,6 +15,21 @@
             text-align: center;
         }
         h1 { color: #2c3e50; }
+        .unlock-box {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #ffeeba;
+        }
+        .unlock-btn {
+            background: #ffc107;
+            color: #333;
+            font-weight: bold;
+            font-size: 16px;
+            padding: 12px 20px;
+        }
+        .unlock-btn:hover { background: #e0a800; }
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -58,8 +73,14 @@
 </head>
 <body>
 
+    <!-- 手機瀏覽器解鎖專用區塊 -->
+    <div class="unlock-box">
+        <p style="margin: 0 0 10px 0; font-size: 14px; color: #856404;">⚠️ 手機瀏覽器安全限制：請先點擊下方按鈕解鎖音效與震動！</p>
+        <button class="unlock-btn" onclick="unlockAudio()">🔓 點此解鎖音效與震動</button>
+    </div>
+
     <h1>五感密碼互動對照表</h1>
-    <p>點擊各按鈕即可同時體驗對應的「聲音」與「手機震動」！</p>
+    <p>解鎖後，點擊各按鈕即可同時體驗「聲音」與「手機震動」！</p>
 
     <div class="grid" id="codeGrid"></div>
 
@@ -96,6 +117,7 @@
         ];
 
         const grid = document.getElementById("codeGrid");
+        let audioCtx = null;
 
         // 動態生成卡片
         data.forEach(item => {
@@ -106,21 +128,41 @@
                     <div class="letter">${item.char}</div>
                     <div class="desc">味覺：${item.t}<br>聽覺：${item.a}<br>觸覺：${item.h}</div>
                 </div>
-                <button onclick="playSensory('${item.char}', ${item.freq}, [${item.vib}])">測試感官</button>
+                <button onclick="playSensory(${item.freq}, [${item.vib}])">測試感官</button>
             `;
             grid.appendChild(card);
         });
 
+        // 解鎖音訊與震動權限
+        function unlockAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            if ("vibrate" in navigator) {
+                navigator.vibrate(200);
+            }
+            alert("✅ 解鎖成功！現在可以點擊下方的字母測試感官了。");
+        }
+
         // 播放聲音與震動
-        function playSensory(char, freq, pattern) {
-            // 1. 觸發手機震動 (需行動裝置支援)
+        function playSensory(freq, pattern) {
+            // 1. 觸發手機震動
             if ("vibrate" in navigator) {
                 navigator.vibrate(pattern);
             }
 
-            // 2. 播放對應頻率聲音
+            // 2. 播放聲音
             try {
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+
                 const oscillator = audioCtx.createOscillator();
                 const gainNode = audioCtx.createGain();
 
@@ -136,7 +178,7 @@
                 oscillator.start();
                 oscillator.stop(audioCtx.currentTime + 0.5);
             } catch (e) {
-                console.log("音效播放受限");
+                console.log("音效播放受限", e);
             }
         }
     </script>
