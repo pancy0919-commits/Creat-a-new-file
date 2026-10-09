@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>五感密碼解碼器</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #f4f4f9;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+        }
+        h1 { color: #2c3e50; }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .letter {
+            font-size: 28px;
+            font-weight: bold;
+            color: #e74c3c;
+            margin-bottom: 5px;
+        }
+        .desc {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover { background: #2980b9; }
+        button:active { background: #1f618d; }
+    </style>
+</head>
+<body>
+
+    <h1>五感密碼互動對照表</h1>
+    <p>點擊各按鈕即可同時體驗對應的「聲音」與「手機震動」！</p>
+
+    <div class="grid" id="codeGrid"></div>
+
+    <script>
+        // 27組資料定義
+        const data = [
+            {char: "A", t: "T1 (辣+酸)", a: "低音 (Do_)", h: "長震動", freq: 130.81, vib: [800]},
+            {char: "B", t: "T1 (辣+酸)", a: "低音 (Do_)", h: "短短短", freq: 130.81, vib: [100, 100, 100, 100, 100]},
+            {char: "C", t: "T1 (辣+酸)", a: "低音 (Do_)", h: "短雙響", freq: 130.81, vib: [150, 100, 150]},
+            {char: "D", t: "T1 (辣+酸)", a: "中音 (Do)", h: "長震動", freq: 261.63, vib: [800]},
+            {char: "E", t: "T1 (辣+酸)", a: "中音 (Do)", h: "短短短", freq: 261.63, vib: [100, 100, 100, 100, 100]},
+            {char: "F", t: "T1 (辣+酸)", a: "中音 (Do)", h: "短雙響", freq: 261.63, vib: [150, 100, 150]},
+            {char: "G", t: "T1 (辣+酸)", a: "高音 (Do^)", h: "長震動", freq: 523.25, vib: [800]},
+            {char: "H", t: "T1 (辣+酸)", a: "高音 (Do^)", h: "短短短", freq: 523.25, vib: [100, 100, 100, 100, 100]},
+            {char: "I", t: "T1 (辣+酸)", a: "高音 (Do^)", h: "短雙響", freq: 523.25, vib: [150, 100, 150]},
+            {char: "J", t: "T2 (鹹+甜)", a: "低音 (Do_)", h: "長震動", freq: 130.81, vib: [800]},
+            {char: "K", t: "T2 (鹹+甜)", a: "低音 (Do_)", h: "短短短", freq: 130.81, vib: [100, 100, 100, 100, 100]},
+            {char: "L", t: "T2 (鹹+甜)", a: "低音 (Do_)", h: "短雙響", freq: 130.81, vib: [150, 100, 150]},
+            {char: "M", t: "T2 (鹹+甜)", a: "中音 (Do)", h: "長震動", freq: 261.63, vib: [800]},
+            {char: "N", t: "T2 (鹹+甜)", a: "中音 (Do)", h: "短短短", freq: 261.63, vib: [100, 100, 100, 100, 100]},
+            {char: "O", t: "T2 (鹹+甜)", a: "中音 (Do)", h: "短雙響", freq: 261.63, vib: [150, 100, 150]},
+            {char: "P", t: "T2 (鹹+甜)", a: "高音 (Do^)", h: "長震動", freq: 523.25, vib: [800]},
+            {char: "Q", t: "T2 (鹹+甜)", a: "高音 (Do^)", h: "短短短", freq: 523.25, vib: [100, 100, 100, 100, 100]},
+            {char: "R", t: "T2 (鹹+甜)", a: "高音 (Do^)", h: "短雙響", freq: 523.25, vib: [150, 100, 150]},
+            {char: "S", t: "T3 (苦)", a: "低音 (Do_)", h: "長震動", freq: 130.81, vib: [800]},
+            {char: "T", t: "T3 (苦)", a: "低音 (Do_)", h: "短短短", freq: 130.81, vib: [100, 100, 100, 100, 100]},
+            {char: "U", t: "T3 (苦)", a: "低音 (Do_)", h: "短雙響", freq: 130.81, vib: [150, 100, 150]},
+            {char: "V", t: "T3 (苦)", a: "中音 (Do)", h: "長震動", freq: 261.63, vib: [800]},
+            {char: "W", t: "T3 (苦)", a: "中音 (Do)", h: "短短短", freq: 261.63, vib: [100, 100, 100, 100, 100]},
+            {char: "X", t: "T3 (苦)", a: "中音 (Do)", h: "短雙響", freq: 261.63, vib: [150, 100, 150]},
+            {char: "Y", t: "T3 (苦)", a: "高音 (Do^)", h: "長震動", freq: 523.25, vib: [800]},
+            {char: "Z", t: "T3 (苦)", a: "高音 (Do^)", h: "短短短", freq: 523.25, vib: [100, 100, 100, 100, 100]},
+            {char: "[空白]", t: "T3 (苦)", a: "高音 (Do^)", h: "短雙響", freq: 523.25, vib: [150, 100, 150]}
+        ];
+
+        const grid = document.getElementById("codeGrid");
+
+        // 動態生成卡片
+        data.forEach(item => {
+            const card = document.createElement("div");
+            card.className = "card";
+            card.innerHTML = `
+                <div>
+                    <div class="letter">${item.char}</div>
+                    <div class="desc">味覺：${item.t}<br>聽覺：${item.a}<br>觸覺：${item.h}</div>
+                </div>
+                <button onclick="playSensory('${item.char}', ${item.freq}, [${item.vib}])">測試感官</button>
+            `;
+            grid.appendChild(card);
+        });
+
+        // 播放聲音與震動
+        function playSensory(char, freq, pattern) {
+            // 1. 觸發手機震動 (需行動裝置支援)
+            if ("vibrate" in navigator) {
+                navigator.vibrate(pattern);
+            }
+
+            // 2. 播放對應頻率聲音
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+
+                oscillator.type = "sine";
+                oscillator.frequency.value = freq;
+
+                gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.5);
+            } catch (e) {
+                console.log("音效播放受限");
+            }
+        }
+    </script>
+</body>
+</html>
